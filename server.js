@@ -29,6 +29,7 @@ wss.on('connection', function connection(ws) {
   packet.setFloat32(9, player.z)
 
   ws.on('message', function incoming(message) {
+    console.log('msg exchange')
     for(var i=0; i<players.length; i++) {
       if(players[i].socket === ws) continue
 
