@@ -3,28 +3,52 @@ var THREE = require('three'),
     OBJLoader = require('./objloader'),
     OBJMTLLoader = require('./objmtlloader'),
     VRControls = require('./vr-controls'),
-    VREffect = require('./vr-effect')
+    VREffect = require('./vr-effect'),
+    Screenfull = require('screenfull')
 
-var PLAYER_ID = null, players = {}, reindeer = null
+// Game state
+
+var PLAYER_ID = null, players = {}, going = false, powerup, playerModel
 
 var packetBuf = new ArrayBuffer(25), packet = new DataView(packetBuf), socketReady = false
-
 var oldPosHash = 0, oldRotHash = 0
+
+// 3D code
 
 function render() {
 
+  if(going) {
+    me.translateZ(-0.5)
+
+    if(me.position.x < -900) me.position.x = -900
+    else if(me.position.x > 900) me.position.x = 900
+
+    if(me.position.y < -50) me.position.y = -50
+    else if(me.position.y > 900) me.position.y = 900
+
+    if(me.position.z < -900) me.position.z = -900
+    else if(me.position.z > 900) me.position.z = 900
+  }
+
   controls.update()
+  powerup.rotation.y += Math.PI / 200
   vrRenderer.render(scene, me)
 
   if(Math.abs((me.position.x + me.position.y + me.position.z).toFixed(2) - oldPosHash) > 0.2 ||
-     Math.abs((me.rotation.x + me.rotation.y + me.rotation.z).toFixed(4) - oldRotHash) > 0.02) {
+     Math.abs((me.rotation.x + me.rotation.y + me.rotation.z).toFixed(4) - oldRotHash) > 0.002) {
+
+    // the original model needs to be turned by 90°, depending on the sensor data clockwise or counter-clockwise
+    var correctedRotY = me.rotation.y
+    if(me.rotation.y >= 0) correctedRotY -= Math.PI / 2
+    else correctedRotY += Math.PI / 2
 
     packet.setFloat32( 1, me.position.x)
     packet.setFloat32( 5, me.position.y)
     packet.setFloat32( 9, me.position.z)
     packet.setFloat32(13, me.rotation.x)
-    packet.setFloat32(17, me.rotation.y)
+    packet.setFloat32(17, correctedRotY)
     packet.setFloat32(21, me.rotation.z)
+
     if(socketReady) socket.send(packet)
 
     // Poor man's hashing :D
@@ -32,42 +56,22 @@ function render() {
     oldRotHash = (me.rotation.x + me.rotation.y + me.rotation.z).toFixed(4)
   }
 
-  return false
+  return false // don't render with the regular renderer
 }
 
 // Starting the world
 World.init({camDistance: 0, farPlane: 3500, renderCallback: render})
 
+var box = new THREE.Mesh(new THREE.BoxGeometry(5, 5, 5), new THREE.MeshPhongMaterial({
+  map: THREE.ImageUtils.loadTexture('js.png')
+}))
+var powerup = new THREE.Mesh(new THREE.SphereGeometry(4.5, 16, 16), new THREE.MeshBasicMaterial({transparent: true, opacity: 0.25, color: 0xff00ff}))
+powerup.add(box)
+World.add(powerup)
+
 var loader = new OBJMTLLoader()
-loader.load('models/islands.obj', 'models/islands.mtl', function(mesh) {
 
-  mesh.scale.set(0.2, 0.2, 0.2)
-  var positions = [
-    [-300, -50, -150],
-    [   0, -50,  500],
-    [ 300, -50, -450],
-    [-800, -50,  650],
-    [ 800, -50,    0],
-  ]
-  for(var i=0; i<5; i++) {
-    var islandGroup = mesh.clone()
-    islandGroup.position.set(positions[i][0],positions[i][1],positions[i][2])
-    World.add(islandGroup)
-  }
-})
-
-loader.load('models/boo2/boo.obj', 'models/boo2/boo.mtl', function(mesh) {
-  reindeer = mesh
-  window.mesh = mesh
-  World.add(mesh)
-//  reindeer.scale.set(0.05, 0.05, 0.05)
-})
-
-hrmpf = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), new THREE.MeshBasicMaterial())
-hrmpf.position.set(0, 50, 0)
-World.add(hrmpf)
-
-var ground = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000), new THREE.MeshBasicMaterial({color: 0x3e56d1}))
+var ground = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000), new THREE.MeshBasicMaterial({color: 0x3ed156}))
 ground.rotation.x = -Math.PI/2
 ground.position.set(0, -50, 0)
 World.add(ground)
@@ -86,43 +90,36 @@ World.add(sky)
 
 var me = World.getCamera(), scene = World.getScene()
 
+loader.load('models/horse/horsebrownhair.obj', 'models/horse/horsebrownhair.mtl', function(mesh) {
+  playerModel = mesh
+  var overlay = document.getElementById('startoverlay')
+  overlay.textContent = 'Tap to start'
+  overlay.addEventListener('touchstart', function() {
+    if(Screenfull.enabled) Screenfull.request()
+    this.parentNode.removeChild(this)
+  })
+})
+
 // VR
 var controls = new VRControls(me),
     vrRenderer = new VREffect(World.getRenderer())
 
 World.add(new THREE.AmbientLight())
-/*
-window.addEventListener('keydown', function(e) {
-  e.preventDefault()
-  switch(e.keyCode) {
-    case 37:
-      me.rotation.y += Math.PI / 100
-    break
-    case 38:
-      me.translateZ(-5)
-    break
-    case 39:
-      me.rotation.y -= Math.PI / 100
-    break
-    case 40:
-      me.translateZ(5)
-    break
-  }
 
-  if(me.position.x < -900) me.position.x = -900
-  else if(me.position.x > 900) me.position.x = 900
-
-  if(me.position.y < -900) me.position.y = -900
-  else if(me.position.y > 900) me.position.y = 900
-
-  if(me.position.z < -900) me.position.z = -900
-  else if(me.position.z > 900) me.position.z = 900
-})
-*/
 World.start()
 console.log("Ready")
 
-// Get the web socket rollin'
+// Event handling
+
+function stopMoving(e) { going = false; e.preventDefault(); e.stopPropagation(); going = false; return false }
+
+var canvas = document.querySelector('canvas')
+canvas.addEventListener('touchstart', function(e) { going = true; e.preventDefault() })
+canvas.addEventListener('touchend', stopMoving)
+canvas.addEventListener('touchcancel', stopMoving)
+canvas.addEventListener('touchleave', stopMoving)
+
+// NETWORKING
 
 var url = new URL(window.location.href)
 var socket = new WebSocket("ws://" + url.host)
@@ -134,20 +131,13 @@ socket.onmessage = function(event) {
     if(PLAYER_ID === null) { // aha, it's our ID :)
       PLAYER_ID = header - 128
       packet.setUint8(0, PLAYER_ID)
-      console.log('WE ARE ' + PLAYER_ID)
+      //console.log('WE ARE ' + PLAYER_ID)
       me.position.set(view.getFloat32(1), view.getFloat32(5), view.getFloat32(9))
-      setTimeout(function() {
-        var test = reindeer.clone()
-        test.position.copy(me.position)
-        test.translateZ(-10)
-        World.add(test)
-        window.wtf = test
-      }, 5000)
       players[PLAYER_ID] = me
       socketReady = true
     } else {
-      console.log('NEW PLAYER: ', header - 128)
-      var newKid = reindeer.clone()
+      //console.log('NEW PLAYER: ', header - 128)
+      var newKid = playerModel.clone()
       newKid.position.set(view.getFloat32(1), view.getFloat32(5), view.getFloat32(9))
 
       players[header - 128] = newKid
