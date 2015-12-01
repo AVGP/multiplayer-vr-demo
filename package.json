@@ -14,7 +14,7 @@
     "express": "^4.13.3",
     "screenfull": "^3.0.0",
     "three": "0.73.0",
-    "three-world": "2.1.1",
+    "three-world": "2.2.0",
     "webvr-polyfill": "0.0.1",
     "ws": "^0.8.0"
   },

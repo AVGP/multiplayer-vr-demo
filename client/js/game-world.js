@@ -72,6 +72,11 @@ module.exports.addPlayer = function(id, x, y, z) {
   World.add(players[id])
 }
 
+module.exports.removePlayer = function(id) {
+  World.remove(players[id])
+  delete players[id]
+}
+
 module.exports.updatePlayer = function(id, px, py, pz, rx, ry, rz) {
   if(localId === id) {
     me.position.set(px, py, pz)

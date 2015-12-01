@@ -1,6 +1,7 @@
 var express = require('express'),
     server = require('http').createServer(),
-    WebSocketServer = require('ws').Server
+    WebSocketServer = require('ws').Server,
+    MsgTypes = require('./msg-types')
 
 var app = express(), wss = new WebSocketServer({ server: server })
 
@@ -61,8 +62,8 @@ function makeInitialAnnouncement(currentPlayerId, players) {
   for(var i=0; i<keys.length; i++) {
     if(parseInt(keys[i], 10) === currentPlayerId) continue // don't announce to the fresh player again
     console.log('announcing player ' + currentPlayerId + ' to ' + keys[i] + ' and vice-versa')
-    players[keys[i]].socket.send(makePacket(currentPlayerId + 128, players[currentPlayerId].position), {binary: true})
-    players[currentPlayerId].socket.send(makePacket(parseInt(keys[i], 10) + 128, players[keys[i]].position), {binary: true})
+    players[keys[i]].socket.send(makePacket(currentPlayerId + (MsgTypes.CONNECT << 6), players[currentPlayerId].position), {binary: true})
+    players[currentPlayerId].socket.send(makePacket(parseInt(keys[i], 10) + (MsgTypes.CONNECT << 6), players[keys[i]].position), {binary: true})
   }
 }
 
@@ -79,13 +80,17 @@ wss.on('connection', function connection(clientSock) {
   console.log('Player joined: ' + thisId)
 
   players[thisId] = { socket: clientSock, position: getRandomPosition() }
-  clientSock.send(makePacket(thisId + 128, players[thisId].position), {binary: true, mask: false}); // announcing player ID to the fresh player
+  clientSock.send(makePacket(thisId + (MsgTypes.CONNECT << 6), players[thisId].position), {binary: true}); // announcing player ID to the fresh player
 
   clientSock.on('message', getBroadcastHandler(clientSock, players));
 
   clientSock.on('close', function() {
+    console.log('Disconnect', thisId)
     delete players[thisId]
-    //TODO: announce disconnect to the others!
+    var keys = Object.keys(players)
+    for(var i=0; i<keys.length; i++) {
+      players[keys[i]].socket.send(makePacket(thisId + (MsgTypes.DISCONNECT << 6)), {binary: true})
+    }
   })
 
   makeInitialAnnouncement(thisId, players)

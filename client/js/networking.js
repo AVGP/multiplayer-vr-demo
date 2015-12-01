@@ -1,19 +1,27 @@
 var WebSocket = require('ws'),
-    Promise = require('bluebird')
+    Promise = require('bluebird'),
+    MsgTypes = require('../../msg-types')
 
 // internals
 var localPlayerId = null, socket = null,
     packetBuf = new ArrayBuffer(25), packet = new DataView(packetBuf)
 
 function handleControlMessage(msgInfo, view, gameWorld) {
-  if(localPlayerId === null) { // aha, it's our ID :)
-    localPlayerId = msgInfo - 128
-    console.log('WE ARE ' + localPlayerId)
-    gameWorld.setLocalId(localPlayerId)
-    gameWorld.updatePlayer(localPlayerId, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
-  } else {
-    console.log('NEW PLAYER: ', msgInfo - 128)
-    gameWorld.addPlayer(msgInfo - 128, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
+  var msgType = msgInfo >> 6,
+      playerId = msgInfo & 63
+  if(msgType === MsgTypes.CONNECT) {
+    if(localPlayerId === null) { // aha, it's our ID :)
+      localPlayerId = playerId
+      console.log('WE ARE ' + localPlayerId)
+      gameWorld.setLocalId(localPlayerId)
+      gameWorld.updatePlayer(localPlayerId, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
+    } else {
+      console.log('NEW PLAYER: ', playerId)
+      gameWorld.addPlayer(playerId, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
+    }
+  } else if(msgType === MsgTypes.DISCONNECT) {
+    console.log('Player disconnected: ', playerId)
+    gameWorld.removePlayer(playerId)
   }
 
 }
@@ -36,7 +44,7 @@ module.exports.init = function(gameWorld) {
       var view = new DataView(event.data)
       var header = view.getUint8(0)
 
-      if(header & 128) {
+      if(header & 128) { // if the most significant bit is set, we're handling a control message
         handleControlMessage(header, view, gameWorld) // control msg: Announce connect / disconnect
         return
       }

@@ -73,6 +73,11 @@ module.exports.addPlayer = function(id, x, y, z) {
   World.add(players[id])
 }
 
+module.exports.removePlayer = function(id) {
+  World.remove(players[id])
+  delete players[id]
+}
+
 module.exports.updatePlayer = function(id, px, py, pz, rx, ry, rz) {
   if(localId === id) {
     me.position.set(px, py, pz)
@@ -154,7 +159,7 @@ module.exports.init = function(params) {
   })
 }
 
-},{"./objloader":5,"./objmtlloader":6,"./vr-controls":7,"./vr-effect":8,"bluebird":9,"three":13,"three-world":12}],2:[function(require,module,exports){
+},{"./objloader":5,"./objmtlloader":6,"./vr-controls":7,"./vr-effect":8,"bluebird":10,"three":14,"three-world":13}],2:[function(require,module,exports){
 var Screenfull = require('screenfull'),
     GameWorld = require('./game-world'),
     Network = require('./networking')
@@ -201,7 +206,7 @@ function parseQueryParams(queryString) {
   return params
 }
 
-},{"./game-world":1,"./networking":4,"screenfull":11}],3:[function(require,module,exports){
+},{"./game-world":1,"./networking":4,"screenfull":12}],3:[function(require,module,exports){
 /**
  * Loads a Wavefront .mtl file specifying materials
  *
@@ -673,23 +678,31 @@ THREE.EventDispatcher.prototype.apply( MTLLoader.prototype );
 
 module.exports = MTLLoader
 
-},{"three":13}],4:[function(require,module,exports){
+},{"three":14}],4:[function(require,module,exports){
 var WebSocket = require('ws'),
-    Promise = require('bluebird')
+    Promise = require('bluebird'),
+    MsgTypes = require('../../msg-types')
 
 // internals
 var localPlayerId = null, socket = null,
     packetBuf = new ArrayBuffer(25), packet = new DataView(packetBuf)
 
 function handleControlMessage(msgInfo, view, gameWorld) {
-  if(localPlayerId === null) { // aha, it's our ID :)
-    localPlayerId = msgInfo - 128
-    console.log('WE ARE ' + localPlayerId)
-    gameWorld.setLocalId(localPlayerId)
-    gameWorld.updatePlayer(localPlayerId, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
-  } else {
-    console.log('NEW PLAYER: ', msgInfo - 128)
-    gameWorld.addPlayer(msgInfo - 128, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
+  var msgType = msgInfo >> 6,
+      playerId = msgInfo & 63
+  if(msgType === MsgTypes.CONNECT) {
+    if(localPlayerId === null) { // aha, it's our ID :)
+      localPlayerId = playerId
+      console.log('WE ARE ' + localPlayerId)
+      gameWorld.setLocalId(localPlayerId)
+      gameWorld.updatePlayer(localPlayerId, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
+    } else {
+      console.log('NEW PLAYER: ', playerId)
+      gameWorld.addPlayer(playerId, view.getFloat32(1), view.getFloat32(5), view.getFloat32(9), 0, 0, 0)
+    }
+  } else if(msgType === MsgTypes.DISCONNECT) {
+    console.log('Player disconnected: ', playerId)
+    gameWorld.removePlayer(playerId)
   }
 
 }
@@ -712,7 +725,7 @@ module.exports.init = function(gameWorld) {
       var view = new DataView(event.data)
       var header = view.getUint8(0)
 
-      if(header & 128) {
+      if(header & 128) { // if the most significant bit is set, we're handling a control message
         handleControlMessage(header, view, gameWorld) // control msg: Announce connect / disconnect
         return
       }
@@ -736,7 +749,7 @@ module.exports.sendLocalUpdate = function(px, py, pz, rx, ry, rz) {
   socket.send(packet)
 }
 
-},{"bluebird":9,"ws":14}],5:[function(require,module,exports){
+},{"../../msg-types":9,"bluebird":10,"ws":15}],5:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  */
@@ -1113,7 +1126,7 @@ OBJLoader.prototype = {
 
 module.exports = OBJLoader;
 
-},{"three":13}],6:[function(require,module,exports){
+},{"three":14}],6:[function(require,module,exports){
 /**
  * Loads a Wavefront .obj file with materials
  *
@@ -1494,7 +1507,7 @@ THREE.EventDispatcher.prototype.apply( OBJMTLLoader.prototype );
 
 module.exports = OBJMTLLoader
 
-},{"./mtlloader":3,"three":13}],7:[function(require,module,exports){
+},{"./mtlloader":3,"three":14}],7:[function(require,module,exports){
 /**
  * @author dmarcos / https://github.com/dmarcos
  * @author mrdoob / http://mrdoob.com
@@ -1870,7 +1883,15 @@ module.exports = function ( renderer, onError ) {
 
 };
 
-},{"three":13}],9:[function(require,module,exports){
+},{"three":14}],9:[function(require,module,exports){
+module.exports = {
+    PLAYERMOVE: 0, // binary 00
+    UNUSED:     1, // binary 01
+    CONNECT:    2, // binary 10
+    DISCONNECT: 3  // binary 11
+}
+
+},{}],10:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -7121,7 +7142,7 @@ module.exports = ret;
 },{"./es5":13}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":10}],10:[function(require,module,exports){
+},{"_process":11}],11:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -7214,7 +7235,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /*!
 * screenfull
 * v3.0.0 - 2015-11-24
@@ -7361,7 +7382,7 @@ process.umask = function() { return 0; };
 	}
 })();
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var THREE = require('three');
 
 var World = (function() {
@@ -7428,6 +7449,10 @@ var World = (function() {
     scene.add(object);
   }
 
+  self.remove = function(object) {
+    scene.remove(object);
+  }
+
   self.recalculateSize = onResize;
 
   self.start = function() {
@@ -7456,7 +7481,7 @@ var World = (function() {
 
 module.exports = World;
 
-},{"three":13}],13:[function(require,module,exports){
+},{"three":14}],14:[function(require,module,exports){
 var self = self || {};// File:src/Three.js
 
 /**
@@ -43645,7 +43670,7 @@ if (typeof exports !== 'undefined') {
   this['THREE'] = THREE;
 }
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 
 /**
  * Module dependencies.
