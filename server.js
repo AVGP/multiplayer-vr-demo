@@ -60,9 +60,9 @@ function makeInitialAnnouncement(currentPlayerId, players) {
   var keys = Object.keys(players)
   for(var i=0; i<keys.length; i++) {
     if(parseInt(keys[i], 10) === currentPlayerId) continue // don't announce to the fresh player again
-    console.log('announcing player ' + currentPlayerId + ' to ' + keys[i])
+    console.log('announcing player ' + currentPlayerId + ' to ' + keys[i] + ' and vice-versa')
     players[keys[i]].socket.send(makePacket(currentPlayerId + 128, players[currentPlayerId].position), {binary: true})
-    players[currentPlayerId].socket.send(makePacket(keys[i] + 128, players[keys[i]].position), {binary: true})
+    players[currentPlayerId].socket.send(makePacket(parseInt(keys[i], 10) + 128, players[keys[i]].position), {binary: true})
   }
 }
 

@@ -80,6 +80,12 @@ module.exports.updatePlayer = function(id, px, py, pz, rx, ry, rz) {
     return
   }
 
+  console.log('updating ', id)
+  if(!players[id]) {
+    console.error('Player does not exist!')
+    console.log(players)
+  }
+
   players[id].position.set(px, py, pz)
   players[id].rotation.set(rx, ry, rz)
 }
