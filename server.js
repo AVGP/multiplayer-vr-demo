@@ -79,7 +79,7 @@ wss.on('connection', function connection(clientSock) {
   console.log('Player joined: ' + thisId)
 
   players[thisId] = { socket: clientSock, position: getRandomPosition() }
-  clientSock.send(makePacket(thisId + 128, players[this.id].position), {binary: true, mask: false}); // announcing player ID to the fresh player
+  clientSock.send(makePacket(thisId + 128, players[thisId].position), {binary: true, mask: false}); // announcing player ID to the fresh player
 
   clientSock.on('message', getBroadcastHandler(clientSock, players));
 
