@@ -55,7 +55,7 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', function() {
-    players[thisId] = undefined
+    delete players[thisId]
     //TODO: announce disconnect to the others!
   })
 
