@@ -2,7 +2,9 @@ var Screenfull = require('screenfull'),
     GameWorld = require('./game-world'),
     Network = require('./networking')
 
-GameWorld.init()
+var queryString = window.location.search.substr(1), params = parseQueryParams(queryString)
+
+GameWorld.init(params)
 .then(function() {
   return Network.init(GameWorld)
 })
@@ -15,6 +17,7 @@ GameWorld.init()
   overlay.addEventListener('touchstart', function() {
     if(Screenfull.enabled) Screenfull.request()
     this.parentNode.removeChild(this)
+    if(params.automove === 'true') GameWorld.startMoving()
   })
 })
 
@@ -22,8 +25,21 @@ GameWorld.init()
 
 function stopMoving(e) { GameWorld.stopMoving(); e.preventDefault(); e.stopPropagation(); return false }
 
-var canvas = document.querySelector('canvas')
-canvas.addEventListener('touchstart', function(e) { GameWorld.startMoving(); e.preventDefault() })
-canvas.addEventListener('touchend', stopMoving)
-canvas.addEventListener('touchcancel', stopMoving)
-canvas.addEventListener('touchleave', stopMoving)
+if(!params.automove || params.automove !== 'true') {
+  var canvas = document.querySelector('canvas')
+  canvas.addEventListener('touchstart', function(e) { GameWorld.startMoving(); e.preventDefault() })
+  canvas.addEventListener('touchend', stopMoving)
+  canvas.addEventListener('touchcancel', stopMoving)
+  canvas.addEventListener('touchleave', stopMoving)
+}
+
+// Utility
+
+function parseQueryParams(queryString) {
+  var parts = queryString.split('&'), params = {}
+  for(var i=0; i<parts.length; i++) {
+    var kvPair = parts[i].split('=')
+    params[kvPair[0]] = decodeURIComponent(kvPair[1])
+  }
+  return params
+}

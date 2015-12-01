@@ -1,47 +1,64 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <title>Multiplayer VR: Fly like an eagle</title>
+  <title>Multiplayer VR: Fly like a horse</title>
   <style>
-  html, body {
-    height: 100%;
-    height: 100vh;
+    body { font-family: sans-serif; }
 
-    padding: 0;
-    margin:  0;
-  }
+    .float-left {
+      float: left;
+      margin-right: 2rem;
+    }
+    .box {
+      height: 300px;
+      clear: both;
+      margin-bottom: 2em;
+    }
 
-  textarea {
-    font-size: 1.2em;
-    font-weight: bold;
-  }
-
-  .modal {
-    position: absolute;
-    z-index: 10;
-    top:    0;
-    bottom: 0;
-
-    left:  0;
-    right: 0;
-
-    background: black;
-    background:rgba(0,0,0,0.75);
-
-    color: white;
-
-    font-family: sans-serif;
-    font-size: 300%;
-    text-align: center;
-
-    line-height: 350px;
-    line-height: 100vh;
-  }
+    .clear { clear: both; }
   </style>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <div class="modal" id="startoverlay">Loading</div>
-  <script src="webvr-polyfill.js"></script>
-  <script src="app.js"></script>
+  <h1>Multiplayer WebVR Demo</h1>
+  <h2>Before you start</h2>
+  <p>This game works with Oculus Rift, Google Cardboard v1 and Google Cardboard v2.</p>
+  <p>To get the best experience, please tell me what device you are using</p>
+
+  <div class="box">
+    <h3>Google Cardboard v2</h3>
+    <img src="v2.jpg" alt="If the top of your cardboard does have a button, it's a Version 2" class="float-left">
+    <p>
+        The Cardboard v2 and its clones have a touch button that is reachable from the top of the Cardboard.
+        You can identify this by looking at the top of your Cardboard.<br>
+        If there is at least one button visible on the top, you've got a Cardboard v2.
+    </p>
+    <p>Press and hold the button to move</p>
+    <a href="game.html">Click here to start the demo</a>
+  </div>
+
+  <div class="box">
+    <h3>Google Cardboard v1</h3>
+    <img src="v1.jpg" alt="If the top of your cardboard does not have buttons, it's a Version 1" class="float-left">
+    <p>
+        The Cardboard v1 and its clones have no touch button. You can identify this by looking at the top of your Cardboard.<br>
+        If there is no button visible on either side, you've got a Cardboard v1.
+    </p>
+    <p>You will automatically start moving</p>
+    <a href="game.html?automove=true">Click here to start the demo</a>
+  </div>
+
+  <div class="box">
+    <h3>Oculus Rift</h3>
+    <img class="float-left" src="oculus.jpg" alt="Oculus Rift has been tested with the DK2">
+    <p>
+      For Oculus Rift the only tested version is the DK 2, but it should work with the DK 1 as well.
+      You will need a WebVR capable browser and the Oculus Runtime.
+    </p>
+    <p>You will automatically start moving</p>
+    <a href="game.html?automove=true">Click here to start the demo</a>
+  </div>
+
 </body>
 </html>

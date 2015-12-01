@@ -8,6 +8,8 @@ var THREE = require('three'),
 
 // internals
 
+var MOVE_SPEED = -0.5
+
 var onMotion = null // handler for updates on local player motion
 var players = {}, localId = 0, going = false, oldPosHash = 0, oldRotHash = 0
 // game objects
@@ -16,7 +18,7 @@ var controls, vrRenderer, powerup, me, scene, playerModel
 function render() {
 
   if(going) {
-    me.translateZ(-0.5)
+    me.translateZ(MOVE_SPEED)
 
     if(me.position.x < -900) me.position.x = -900
     else if(me.position.x > 900) me.position.x = 900
@@ -84,7 +86,11 @@ module.exports.updatePlayer = function(id, px, py, pz, rx, ry, rz) {
 module.exports.startMoving = function() { going = true }
 module.exports.stopMoving = function() { going = false }
 
-module.exports.init = function() {
+module.exports.init = function(params) {
+  if(params.automove === 'true') {
+    MOVE_SPEED = -0.2 // slow 'em down
+  }
+
   return new Promise(function(resolve, reject) {
 
     World.init({camDistance: 0, farPlane: 3500, renderCallback: render})
@@ -134,7 +140,7 @@ module.exports.init = function() {
     })
 
     // VR
-    controls = new VRControls(me),
+    controls = new VRControls(me)
     vrRenderer = new VREffect(World.getRenderer())
 
     World.start()
