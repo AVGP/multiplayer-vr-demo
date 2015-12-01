@@ -2,10 +2,9 @@ var Screenfull = require('screenfull'),
     GameWorld = require('./game-world'),
     Network = require('./networking')
 
-// 3D code
 GameWorld.init()
 .then(function() {
-  return Network.setup(GameWorld)
+  return Network.init(GameWorld)
 })
 .then(function() {
   GameWorld.setMotionListener(Network.sendLocalUpdate)

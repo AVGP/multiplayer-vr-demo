@@ -71,7 +71,6 @@ module.exports.addPlayer = function(id, x, y, z) {
 }
 
 module.exports.updatePlayer = function(id, px, py, pz, rx, ry, rz) {
-  console.log('Update ', id, localId, id === localId)
   if(localId === id) {
     me.position.set(px, py, pz)
     me.rotation.set(rx, ry, rz)

@@ -72,7 +72,6 @@ module.exports.addPlayer = function(id, x, y, z) {
 }
 
 module.exports.updatePlayer = function(id, px, py, pz, rx, ry, rz) {
-  console.log('Update ', id, localId, id === localId)
   if(localId === id) {
     me.position.set(px, py, pz)
     me.rotation.set(rx, ry, rz)
@@ -148,10 +147,9 @@ var Screenfull = require('screenfull'),
     GameWorld = require('./game-world'),
     Network = require('./networking')
 
-// 3D code
 GameWorld.init()
 .then(function() {
-  return Network.setup(GameWorld)
+  return Network.init(GameWorld)
 })
 .then(function() {
   GameWorld.setMotionListener(Network.sendLocalUpdate)
@@ -676,7 +674,7 @@ function handlePlayerUpdate(playerId, view, gameWorld) {
 }
 
 // API
-module.exports.setup = function(gameWorld) {
+module.exports.init = function(gameWorld) {
   return new Promise(function(resolve, reject) {
     var url = new URL(window.location.href)
 
@@ -695,7 +693,7 @@ module.exports.setup = function(gameWorld) {
       handlePlayerUpdate(header, view, gameWorld)
     }
 
-    socket.onopen = resolve  
+    socket.onopen = resolve
   })
 }
 

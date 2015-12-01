@@ -26,7 +26,7 @@ function handlePlayerUpdate(playerId, view, gameWorld) {
 }
 
 // API
-module.exports.setup = function(gameWorld) {
+module.exports.init = function(gameWorld) {
   return new Promise(function(resolve, reject) {
     var url = new URL(window.location.href)
 
@@ -45,7 +45,7 @@ module.exports.setup = function(gameWorld) {
       handlePlayerUpdate(header, view, gameWorld)
     }
 
-    socket.onopen = resolve  
+    socket.onopen = resolve
   })
 }
 
