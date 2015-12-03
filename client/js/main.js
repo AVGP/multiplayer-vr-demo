@@ -16,6 +16,16 @@ GameWorld.init(params)
   overlay.textContent = 'Tap to start'
   overlay.addEventListener('touchstart', function() {
     if(Screenfull.enabled) Screenfull.request()
+
+    screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation
+
+    if (screen.lockOrientationUniversal) {
+      screen.lockOrientationUniversal('landscape')
+    } else if(screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').then(function() {
+      }, function() { console.log('no lock') })
+    }
+
     this.parentNode.removeChild(this)
     if(params.automove === 'true') GameWorld.startMoving()
   })
