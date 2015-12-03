@@ -37,11 +37,7 @@ function render() {
   if(Math.abs((me.position.x + me.position.y + me.position.z).toFixed(2) - oldPosHash) > 0.2 ||
      Math.abs((me.rotation.x + me.rotation.y + me.rotation.z).toFixed(4) - oldRotHash) > 0.02) {
 
-    // the original model needs to be turned by 90°, depending on the sensor data clockwise or counter-clockwise
-    // TODO: Compass correction isn't correct yet
     var correctedRotY = me.rotation.y
-    if(me.rotation.y >= 0) correctedRotY -= Math.PI / 2
-    else correctedRotY += Math.PI / 2
 
     if(onMotion) onMotion(me.position.x, me.position.y, me.position.z, me.rotation.x, correctedRotY, me.rotation.z)
 
@@ -67,7 +63,8 @@ module.exports.setLocalId = function(id) { localId = id }
 module.exports.setMotionListener = function(handler) { onMotion = handler }
 
 module.exports.addPlayer = function(id, x, y, z) {
-  players[id] = playerModel.clone()
+  players[id] = new THREE.Object3D()
+  players[id].add(playerModel.clone())
   players[id].position.set(x, y, z)
   World.add(players[id])
 }
@@ -146,6 +143,7 @@ module.exports.init = function(params) {
     // Horse for players
     var loader = new OBJMTLLoader()
     loader.load('models/horse/horsebrownhair.obj', 'models/horse/horsebrownhair.mtl', function(mesh) {
+      mesh.rotation.y = -Math.PI/2
       playerModel = mesh
       resolve()
     })
