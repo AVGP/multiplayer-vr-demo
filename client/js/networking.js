@@ -44,6 +44,12 @@ module.exports.init = function(gameWorld) {
       var view = new DataView(event.data)
       var header = view.getUint8(0)
 
+      if(header >> 6 === MsgTypes.REJECT) {
+        alert('Sorry, the server is full :( Try again later!')
+        window.location.href= '/';
+        return
+      }
+
       if(header & 128) { // if the most significant bit is set, we're handling a control message
         handleControlMessage(header, view, gameWorld) // control msg: Announce connect / disconnect
         return

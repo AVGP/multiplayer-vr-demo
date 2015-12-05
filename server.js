@@ -74,6 +74,12 @@ function makeInitialAnnouncement(currentPlayerId, players) {
 // 25 byte per packet
 
 wss.on('connection', function connection(clientSock) {
+  if(nextId === 63) {
+    console.log('Rejected player :(')
+    clientSock.send(makePacket(MsgTypes.REJECT << 6), {binary:true})
+    clientSock.close()
+    return
+  }
   var thisId = nextId;
   nextId++;
 
