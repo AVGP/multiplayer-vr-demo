@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "browserify client/js/main.js | uglifyjs -mc > client/app.js",
-    "dev": "watchify -v -o client/app.js client/js/main.js"
+    "dev": "watchify -v -o client/app.js client/js/main.js",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
