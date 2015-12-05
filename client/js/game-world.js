@@ -37,9 +37,7 @@ function render() {
   if(Math.abs((me.position.x + me.position.y + me.position.z).toFixed(2) - oldPosHash) > 0.2 ||
      Math.abs((me.rotation.x + me.rotation.y + me.rotation.z).toFixed(4) - oldRotHash) > 0.02) {
 
-    var correctedRotY = me.rotation.y
-
-    if(onMotion) onMotion(me.position.x, me.position.y, me.position.z, me.rotation.x, correctedRotY, me.rotation.z)
+    if(onMotion) onMotion(me.position.x, me.position.y, me.position.z, me.rotation.x, me.rotation.y, me.rotation.z)
 
     // Poor man's hashing :D
     oldPosHash = (me.position.x + me.position.y + me.position.z).toFixed(2)
