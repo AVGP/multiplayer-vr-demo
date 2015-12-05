@@ -23,7 +23,7 @@ app.get('/reset', function(req, res) {
 function getRandomPosition() {
   return {
     x: -200 + Math.random() * 400,
-    y: Math.random() * 500,
+    y: 0,
     z: -200 + Math.random() * 400
   }
 }
